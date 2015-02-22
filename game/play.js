@@ -1,92 +1,40 @@
-EnemyShip = function(name, game, bullets, x, y) {
 
-    this.x = x;
-    this.y = y;
+function Play() {}
 
-    this.game = game;
-    this.bullets = bullets;
-    this.health = 3;
-    this.nextFire = 0;
-    this.isAlive = true;
 
-    this.ship = game.add.sprite(x, y, 'enemy1');
-    this.ship.enableBody = true;
 
-    this.ship.name = name.toString();
+function Play() {}
 
-    game.physics.enable(this.ship, Phaser.Physics.ARCADE);
-    this.ship.body.velocity.y = 200;
 
-    this.outOfBoundsKill = true;
-    this.checkWorldBounds = true;
+Play.prototype = {
 }
 
-EnemyShip.prototype.damage = function() {
+  var killCounter = 0;
+  var killText;
 
-    this.health -= 1;
+  var background;
+  var speedLines;
+  var speedLineTimer = 0;
+  var nebulas;
+  var nebulaTimer = 0;
 
-    if (this.health <= 0) {
-        this.isAlive = false;
-        this.ship.kill();
+  var player;
+  var cursors;
 
-        return true;
-    }
+  var bulletTime = 0;
+  var bullet;
+  var bullets;
 
-    return false;
+  var enemyBullets;
+  var enemyBullet;
+  var enemyFiringTimer = 0;
 
-}
+  var enemies;
+  var enemySpawnTimer = 0;
 
-EnemyShip.prototype.update = function() {
+  var laserHits;
 
-    if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0)
-    {
-        this.nextFire = this.game.time.now + this.fireRate;
-
-        var bullet = this.bullets.getFirstDead();
-
-        bullet.reset(this.ship.x, this.ship.y);
-
-        // bullet.rotation = this.game.physics.arcade.moveToObject(bullet, this.ship.x, this.ship.y + 1000);
-    }
-
-};
-
-
-var game;
-window.onload = function() {
-    game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', { 
-        preload: preload, create: create, update: update, render: render
-    });
-
-};
-
-var killCounter = 0;
-var killText;
-
-var background;
-var speedLines;
-var speedLineTimer = 0;
-var nebulas;
-var nebulaTimer = 0;
-
-var player;
-var cursors;
-
-var bulletTime = 0;
-var bullet;
-var bullets;
-
-var enemyBullets;
-var enemyBullet;
-var enemyFiringTimer = 0;
-
-var enemies;
-var enemySpawnTimer = 0;
-
-var laserHits;
-
-function preload () {
-
+  preload: function() {
     game.load.image('background', 'assets/Backgrounds/darkPurple.png');
     game.load.image('speedLine', 'assets/Backgrounds/speedLine.png');
     game.load.image('nebula', 'assets/Backgrounds/nebula.png');
@@ -97,62 +45,59 @@ function preload () {
     game.load.image('enemy1', 'assets/PNG/Enemies/enemyBlue1.png');
     game.load.spritesheet('laserHitRed', 'assets/PNG/Lasers/laserRed08_sprite.png', 48, 46);
 
-}
+  },
+  create: function() {
 
-function create () {
+  game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+  background = game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
-    background = game.add.tileSprite(0, 0, game.width, game.height, 'background');
+  speedLines = game.add.group();
+  speedLines.enableBody = true;
+  speedLines.createMultiple(30, 'speedLine');
+  speedLines.setAll('outOfBoundsKill', true);
+  speedLines.setAll('checkWorldBounds', true);
 
-    speedLines = game.add.group();
-    speedLines.enableBody = true;
-    speedLines.createMultiple(30, 'speedLine');
-    speedLines.setAll('outOfBoundsKill', true);
-    speedLines.setAll('checkWorldBounds', true);
+  nebulas = game.add.group();
+  nebulas.enableBody = true;
+  nebulas.createMultiple(10, 'speedLine');
+  nebulas.setAll('outOfBoundsKill', true);
+  nebulas.setAll('checkWorldBounds', true);
+  
+  killText = game.add.text(10, 10, "Kills: " + killCounter, {font: '34px Courier', fill: '#D3D3D3'});
 
-    nebulas = game.add.group();
-    nebulas.enableBody = true;
-    nebulas.createMultiple(10, 'speedLine');
-    nebulas.setAll('outOfBoundsKill', true);
-    nebulas.setAll('checkWorldBounds', true);
-    
-    killText = game.add.text(10, 10, "Kills: " + killCounter, {font: '34px Courier', fill: '#D3D3D3'});
+  player = game.add.sprite(128, 400, 'player');
+  player.anchor.setTo(0.5, 0.5);
+  game.physics.enable(player, Phaser.Physics.ARCADE)
 
-    player = game.add.sprite(128, 400, 'player');
-    player.anchor.setTo(0.5, 0.5);
-    game.physics.enable(player, Phaser.Physics.ARCADE)
+  bullets = game.add.group();
+  bullets.enableBody = true;
+  bullets.physicsBodyType = Phaser.Physics.ARCADE;
+  bullets.createMultiple(30, 'bullet');
+  bullets.setAll('anchor.x', 0.5);
+  bullets.setAll('anchor.y', 0.5);
+  bullets.setAll('outOfBoundsKill', true);
+  bullets.setAll('checkWorldBounds', true);
 
-    bullets = game.add.group();
-    bullets.enableBody = true;
-    bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    bullets.createMultiple(30, 'bullet');
-    bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', 0.5);
-    bullets.setAll('outOfBoundsKill', true);
-    bullets.setAll('checkWorldBounds', true);
+  enemyBullets = game.add.group();
+  enemyBullets.enableBody = true;
+  enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
+  enemyBullets.createMultiple(30, 'enemyBullet');
+  enemyBullets.setAll('anchor.x', 0.5);
+  enemyBullets.setAll('anchor.y', 1)
+  enemyBullets.setAll('outOfBoundsKill', true);
+  enemyBullets.setAll('checkWorldBounds', true);
 
-    enemyBullets = game.add.group();
-    enemyBullets.enableBody = true;
-    enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
-    enemyBullets.createMultiple(30, 'enemyBullet');
-    enemyBullets.setAll('anchor.x', 0.5);
-    enemyBullets.setAll('anchor.y', 1)
-    enemyBullets.setAll('outOfBoundsKill', true);
-    enemyBullets.setAll('checkWorldBounds', true);
+  enemies = [];
 
-    enemies = [];
+  laserHits = game.add.group();
+  laserHits.createMultiple(30, 'laserHitRed');
+  laserHits.forEach(setupLasers, this);
 
-    laserHits = game.add.group();
-    laserHits.createMultiple(30, 'laserHitRed');
-    laserHits.forEach(setupLasers, this);
-
-    cursors = game.input.keyboard.createCursorKeys();
-    fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-}
-
-function update() {
-
+  cursors = game.input.keyboard.createCursorKeys();
+  fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+  },
+  update: function() {
     background.tilePosition.y += 1;
     if(game.time.now > speedLineTimer) {
         spawnSpeedLine();
@@ -192,13 +137,7 @@ function update() {
     game.world.bringToTop(bullets);
     game.world.bringToTop(player);
     game.world.bringToTop(laserHits);
-}
-
-function render() {
-
-}
-
-////////////////////////////////////////////
+  }
 
 function fire() {
     if(game.time.now > bulletTime) {
@@ -281,3 +220,4 @@ function setupLasers(laser) {
     laser.anchor.y = 0.5;
     laser.animations.add('laserHitRed');
 }
+  };
