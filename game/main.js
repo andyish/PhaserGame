@@ -9,7 +9,7 @@ window.onload = function() {
 	game.state.add('play', Play);
 	game.state.add('menu', Menu);
 
-	game.state.start('menu');
+	game.state.start('play');
 };
 
 
